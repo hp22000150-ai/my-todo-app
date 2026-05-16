@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"c:\\\\Users\\\\USER\\\\AI파운더스\")",
+      "Read(//c/Users/USER/AI파운더스/**)"
+    ]
+  }
+}
