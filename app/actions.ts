@@ -15,6 +15,10 @@ export async function addTodo(formData: FormData) {
 
   const dueDate = formData.get("due_date") as string;
   const categoryId = formData.get("category_id") as string;
+  const isRecurring = formData.get("is_recurring") === "on";
+  const recurrenceDays = isRecurring
+    ? parseInt(formData.get("recurrence_days") as string) || 7
+    : null;
 
   const { data: last } = await supabase
     .from("todos")
@@ -32,6 +36,8 @@ export async function addTodo(formData: FormData) {
     due_date: dueDate || null,
     category_id: categoryId || null,
     sort_order: nextOrder,
+    is_recurring: isRecurring,
+    recurrence_days: recurrenceDays,
   });
 
   revalidatePath("/");
@@ -39,6 +45,31 @@ export async function addTodo(formData: FormData) {
 
 export async function toggleTodo(id: string, completed: boolean) {
   const supabase = await createClient();
+
+  if (!completed) {
+    // 완료로 전환 시 반복 할 일이면 다음 주기 자동 생성
+    const { data: todo } = await supabase
+      .from("todos")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (todo?.is_recurring && todo.recurrence_days && todo.due_date) {
+      const nextDue = new Date(todo.due_date);
+      nextDue.setDate(nextDue.getDate() + todo.recurrence_days);
+
+      await supabase.from("todos").insert({
+        title: todo.title,
+        user_id: todo.user_id,
+        due_date: nextDue.toISOString(),
+        category_id: todo.category_id,
+        sort_order: (todo.sort_order ?? 0) + 0.5,
+        is_recurring: true,
+        recurrence_days: todo.recurrence_days,
+      });
+    }
+  }
+
   await supabase.from("todos").update({ completed: !completed }).eq("id", id);
   revalidatePath("/");
 }

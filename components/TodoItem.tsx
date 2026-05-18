@@ -38,6 +38,14 @@ export default function TodoItem({
   const dday = todo.due_date && !todo.completed ? getDday(todo.due_date) : null;
   const category = categories.find((c) => c.id === todo.category_id);
 
+  const recurringLabel = todo.is_recurring
+    ? todo.recurrence_days === 1 ? "매일"
+    : todo.recurrence_days === 7 ? "매주"
+    : todo.recurrence_days === 14 ? "격주"
+    : todo.recurrence_days === 30 ? "매월"
+    : `${todo.recurrence_days}일마다`
+    : null;
+
   return (
     <li className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
       <button
@@ -87,6 +95,12 @@ export default function TodoItem({
             style={{ backgroundColor: category.color }}
           >
             {category.name}
+          </span>
+        )}
+
+        {recurringLabel && (
+          <span className="flex-shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-900/40 dark:text-purple-300">
+            🔁 {recurringLabel}
           </span>
         )}
 

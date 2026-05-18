@@ -1,15 +1,17 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { addTodo } from "@/app/actions";
 import { Category } from "@/types/todo";
 
 export default function AddTodo({ categories }: { categories: Category[] }) {
   const ref = useRef<HTMLFormElement>(null);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     await addTodo(formData);
     ref.current?.reset();
+    setIsRecurring(false);
   }
 
   return (
@@ -29,6 +31,7 @@ export default function AddTodo({ categories }: { categories: Category[] }) {
           추가
         </button>
       </div>
+
       <div className="flex gap-2">
         <input
           name="due_date"
@@ -46,6 +49,31 @@ export default function AddTodo({ categories }: { categories: Category[] }) {
                 {cat.name}
               </option>
             ))}
+          </select>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <input
+            type="checkbox"
+            name="is_recurring"
+            checked={isRecurring}
+            onChange={(e) => setIsRecurring(e.target.checked)}
+            className="rounded"
+          />
+          반복 할 일
+        </label>
+
+        {isRecurring && (
+          <select
+            name="recurrence_days"
+            className="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-500 outline-none focus:border-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+          >
+            <option value="1">매일</option>
+            <option value="7" defaultValue={7}>매주</option>
+            <option value="14">격주</option>
+            <option value="30">매월</option>
           </select>
         )}
       </div>
