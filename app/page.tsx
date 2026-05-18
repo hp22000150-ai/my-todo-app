@@ -7,6 +7,7 @@ import TodoList from "@/components/TodoList";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
 import ThemeToggle from "@/components/ThemeToggle";
+import ExportButton from "@/components/ExportButton";
 
 export default async function Home({
   searchParams,
@@ -61,12 +62,14 @@ export default async function Home({
                 <li>🔁 <b>반복 설정</b> — 완료 시 다음 주기 자동 생성</li>
                 <li>📊 <b>진행률 바</b> — 전체 완료 현황 표시</li>
                 <li>🌙 <b>달/해 버튼</b> — 다크/라이트 모드 전환</li>
+                <li>⬇️ <b>내보내기 버튼</b> — 전체 일정을 CSV 파일로 저장</li>
               </ul>
               <div className="absolute -top-1.5 left-6 h-3 w-3 rotate-45 border-l border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800" />
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <ExportButton todos={(todos as Todo[]) ?? []} categories={(categories as Category[]) ?? []} />
           <ThemeToggle />
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {user?.email}
