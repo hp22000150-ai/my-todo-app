@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = { error?: string; message?: string } | undefined;
@@ -49,6 +50,42 @@ export async function signup(
   }
 
   return { message: "이메일을 확인해 계정을 활성화하세요." };
+}
+
+export async function requestPasswordReset(
+  prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = formData.get("email") as string;
+  if (!email?.trim()) return { error: "이메일을 입력해 주세요." };
+
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const redirectTo = `${protocol}://${host}/auth/callback?next=/reset-password`;
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
+  if (error) return { error: "이메일 발송 중 오류가 발생했습니다. 다시 시도해 주세요." };
+
+  return { message: "비밀번호 재설정 링크를 이메일로 보냈습니다. 메일함을 확인해 주세요." };
+}
+
+export async function updatePassword(
+  prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const password = formData.get("password") as string;
+  if (!password || password.length < 6)
+    return { error: "비밀번호는 6자 이상이어야 합니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { error: "비밀번호 변경 중 오류가 발생했습니다. 링크가 만료되었을 수 있습니다." };
+
+  redirect("/");
 }
 
 export async function logout() {
