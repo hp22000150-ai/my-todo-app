@@ -38,7 +38,7 @@ export default async function Home({
   const { data: todos } = await query;
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-4 pt-10 pb-28">
+    <main className="mx-auto min-h-screen max-w-xl px-4 pt-10 pb-16">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -89,6 +89,8 @@ export default async function Home({
       </div>
 
       <div className="space-y-4">
+        <AddTodoModal categories={(categories as Category[]) ?? []} />
+
         <Suspense>
           <SearchBar />
         </Suspense>
@@ -102,8 +104,6 @@ export default async function Home({
           categories={(categories as Category[]) ?? []}
         />
       </div>
-
-      <AddTodoModal categories={(categories as Category[]) ?? []} />
     </main>
   );
 }
