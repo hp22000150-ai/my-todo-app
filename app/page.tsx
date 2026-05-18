@@ -68,20 +68,22 @@ export default async function Home({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {user?.email?.split("@")[0]}
+            </span>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                로그아웃
+              </button>
+            </form>
+          </div>
           <ExportButton todos={(todos as Todo[]) ?? []} categories={(categories as Category[]) ?? []} />
-          <ThemeToggle />
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {user?.email?.split("@")[0]}
-          </span>
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              로그아웃
-            </button>
-          </form>
         </div>
       </div>
 
