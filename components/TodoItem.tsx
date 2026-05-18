@@ -6,7 +6,14 @@ import { deleteTodo, updateTodo } from "@/app/actions";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function MiniCalendar({ dueDate }: { dueDate: Date }) {
+function parseDueDate(dueDateStr: string): { dateOnly: string; hasTime: boolean } {
+  const d = new Date(dueDateStr);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const dateOnly = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return { dateOnly, hasTime: false };
+}
+
+function MiniCalendar({ dueDate, dueTime }: { dueDate: Date; dueTime: string | null }) {
   const year = dueDate.getFullYear();
   const month = dueDate.getMonth();
   const dueDay = dueDate.getDate();
@@ -57,11 +64,16 @@ function MiniCalendar({ dueDate }: { dueDate: Date }) {
           );
         })}
       </div>
+      {dueTime && (
+        <p className="mt-2 border-t border-gray-100 pt-2 text-center text-xs font-medium text-blue-500 dark:border-gray-700">
+          ⏰ {dueTime}
+        </p>
+      )}
     </div>
   );
 }
 
-function DdayBadge({ dueDateStr }: { dueDateStr: string }) {
+function DdayBadge({ dueDateStr, dueTime }: { dueDateStr: string; dueTime: string | null }) {
   const [show, setShow] = useState(false);
 
   const today = new Date();
@@ -85,11 +97,11 @@ function DdayBadge({ dueDateStr }: { dueDateStr: string }) {
       onMouseLeave={() => setShow(false)}
     >
       <span className={`cursor-default rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>
-        {label}
+        {label}{dueTime ? ` ${dueTime}` : ""}
       </span>
       {show && (
         <div className="absolute bottom-full right-0 z-20 mb-2">
-          <MiniCalendar dueDate={new Date(dueDateStr)} />
+          <MiniCalendar dueDate={new Date(dueDateStr)} dueTime={dueTime} />
         </div>
       )}
     </div>
@@ -106,11 +118,28 @@ export default function TodoItem({
   onToggle: (id: string, completed: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(todo.title);
+  const [editTitle, setEditTitle] = useState(todo.title);
+
+  const { dateOnly: initDate } = todo.due_date ? parseDueDate(todo.due_date) : { dateOnly: "" };
+  const [editDate, setEditDate] = useState(initDate);
+  const [editTime, setEditTime] = useState(todo.due_time ?? "");
+
+  function cancelEdit() {
+    setEditTitle(todo.title);
+    setEditDate(initDate);
+    setEditTime(todo.due_time ?? "");
+    setEditing(false);
+  }
 
   async function handleEdit() {
-    if (editValue.trim() && editValue !== todo.title) {
-      await updateTodo(todo.id, editValue);
+    if (editTitle.trim()) {
+      const dateChanged = editDate !== initDate || editTime !== (todo.due_time ?? "");
+      await updateTodo(
+        todo.id,
+        editTitle,
+        dateChanged ? editDate || null : undefined,
+        dateChanged ? editTime || null : undefined,
+      );
     }
     setEditing(false);
   }
@@ -147,48 +176,77 @@ export default function TodoItem({
         )}
       </button>
 
-      <div className="flex flex-1 items-center gap-2 min-w-0">
+      <div className="flex flex-1 flex-col gap-1.5 min-w-0">
         {editing ? (
-          <input
-            autoFocus
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleEdit();
-              if (e.key === "Escape") { setEditValue(todo.title); setEditing(false); }
-            }}
-            className="flex-1 rounded border border-blue-400 px-2 py-0.5 text-sm outline-none focus:ring-2 focus:ring-blue-100 dark:bg-gray-700 dark:text-white"
-          />
+          <>
+            <input
+              autoFocus
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleEdit();
+                if (e.key === "Escape") cancelEdit();
+              }}
+              className="w-full rounded border border-blue-400 px-2 py-0.5 text-sm outline-none focus:ring-2 focus:ring-blue-100 dark:bg-gray-700 dark:text-white"
+            />
+            <div className="flex flex-wrap items-center gap-1.5">
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-600 outline-none focus:border-blue-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+              />
+              <input
+                type="time"
+                value={editTime}
+                onChange={(e) => setEditTime(e.target.value)}
+                className="w-28 rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-600 outline-none focus:border-blue-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+              />
+              <button
+                onClick={handleEdit}
+                className="rounded bg-blue-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-600"
+              >
+                저장
+              </button>
+              <button
+                onClick={cancelEdit}
+                className="rounded px-2 py-0.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                취소
+              </button>
+            </div>
+          </>
         ) : (
-          <span
-            className={`flex-1 truncate text-sm ${
-              todo.completed
-                ? "text-gray-400 line-through dark:text-gray-500"
-                : "text-gray-700 dark:text-gray-200"
-            }`}
-          >
-            {todo.title}
-          </span>
-        )}
+          <div className="flex items-center gap-2">
+            <span
+              className={`flex-1 truncate text-sm ${
+                todo.completed
+                  ? "text-gray-400 line-through dark:text-gray-500"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+            >
+              {todo.title}
+            </span>
 
-        {category && (
-          <span
-            className="flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
-            style={{ backgroundColor: category.color }}
-          >
-            {category.name}
-          </span>
-        )}
+            {category && (
+              <span
+                className="flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                style={{ backgroundColor: category.color }}
+              >
+                {category.name}
+              </span>
+            )}
 
-        {recurringLabel && (
-          <span className="flex-shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-900/40 dark:text-purple-300">
-            🔁 {recurringLabel}
-          </span>
-        )}
+            {recurringLabel && (
+              <span className="flex-shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-900/40 dark:text-purple-300">
+                🔁 {recurringLabel}
+              </span>
+            )}
 
-        {todo.due_date && !todo.completed && (
-          <DdayBadge dueDateStr={todo.due_date} />
+            {todo.due_date && !todo.completed && (
+              <DdayBadge dueDateStr={todo.due_date} dueTime={todo.due_time} />
+            )}
+          </div>
         )}
       </div>
 

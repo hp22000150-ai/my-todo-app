@@ -14,6 +14,7 @@ export async function addTodo(formData: FormData) {
   if (!user) return;
 
   const dueDate = formData.get("due_date") as string;
+  const dueTime = formData.get("due_time") as string;
   const categoryId = formData.get("category_id") as string;
   const isRecurring = formData.get("is_recurring") === "on";
   const recurrenceDays = isRecurring
@@ -34,6 +35,7 @@ export async function addTodo(formData: FormData) {
     title: title.trim(),
     user_id: user.id,
     due_date: dueDate || null,
+    due_time: (dueDate && dueTime) ? dueTime : null,
     category_id: categoryId || null,
     sort_order: nextOrder,
     is_recurring: isRecurring,
@@ -74,10 +76,20 @@ export async function toggleTodo(id: string, completed: boolean) {
   revalidatePath("/");
 }
 
-export async function updateTodo(id: string, title: string) {
+export async function updateTodo(
+  id: string,
+  title: string,
+  dueDate?: string | null,
+  dueTime?: string | null,
+) {
   if (!title?.trim()) return;
   const supabase = await createClient();
-  await supabase.from("todos").update({ title: title.trim() }).eq("id", id);
+  const patch: Record<string, unknown> = { title: title.trim() };
+  if (dueDate !== undefined) {
+    patch.due_date = dueDate || null;
+    patch.due_time = (dueDate && dueTime) ? dueTime : null;
+  }
+  await supabase.from("todos").update(patch).eq("id", id);
   revalidatePath("/");
 }
 

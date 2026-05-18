@@ -38,6 +38,11 @@ export default function AddTodo({ categories }: { categories: Category[] }) {
           type="date"
           className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
         />
+        <input
+          name="due_time"
+          type="time"
+          className="w-32 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-500 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+        />
         {categories.length > 0 && (
           <select
             name="category_id"
