@@ -10,7 +10,13 @@ const PRIORITIES = [
   { value: "low", label: "낮음", color: "bg-green-500" },
 ] as const;
 
-export default function AddTodo({ categories }: { categories: Category[] }) {
+export default function AddTodo({
+  categories,
+  onSuccess,
+}: {
+  categories: Category[];
+  onSuccess?: () => void;
+}) {
   const ref = useRef<HTMLFormElement>(null);
   const [isRecurring, setIsRecurring] = useState(false);
   const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
@@ -21,6 +27,7 @@ export default function AddTodo({ categories }: { categories: Category[] }) {
     ref.current?.reset();
     setIsRecurring(false);
     setPriority("medium");
+    onSuccess?.();
   }
 
   return (

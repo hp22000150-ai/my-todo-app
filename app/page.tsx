@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Todo, Category } from "@/types/todo";
 import { logout } from "@/app/auth/actions";
-import AddTodo from "@/components/AddTodo";
 import TodoList from "@/components/TodoList";
+import AddTodoModal from "@/components/AddTodoModal";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -38,7 +38,7 @@ export default async function Home({
   const { data: todos } = await query;
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-4 py-16">
+    <main className="mx-auto min-h-screen max-w-xl px-4 pt-10 pb-28">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -88,8 +88,6 @@ export default async function Home({
       </div>
 
       <div className="space-y-4">
-        <AddTodo categories={(categories as Category[]) ?? []} />
-
         <Suspense>
           <SearchBar />
         </Suspense>
@@ -103,6 +101,8 @@ export default async function Home({
           categories={(categories as Category[]) ?? []}
         />
       </div>
+
+      <AddTodoModal categories={(categories as Category[]) ?? []} />
     </main>
   );
 }
