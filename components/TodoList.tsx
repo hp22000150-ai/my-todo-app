@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useOptimistic, startTransition } from "react";
 import {
   DndContext,
   closestCenter,
@@ -18,9 +18,17 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Todo, Category } from "@/types/todo";
 import TodoItem from "./TodoItem";
-import { reorderTodos } from "@/app/actions";
+import { toggleTodo, reorderTodos } from "@/app/actions";
 
-function SortableItem({ todo, categories }: { todo: Todo; categories: Category[] }) {
+function SortableItem({
+  todo,
+  categories,
+  onToggle,
+}: {
+  todo: Todo;
+  categories: Category[];
+  onToggle: (id: string, completed: boolean) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: todo.id });
 
@@ -41,7 +49,7 @@ function SortableItem({ todo, categories }: { todo: Todo; categories: Category[]
         </svg>
       </button>
       <div className="flex-1">
-        <TodoItem todo={todo} categories={categories} />
+        <TodoItem todo={todo} categories={categories} onToggle={onToggle} />
       </div>
     </li>
   );
@@ -54,9 +62,27 @@ export default function TodoList({
   todos: Todo[];
   categories: Category[];
 }) {
-  const pending = todos.filter((t) => !t.completed);
-  const done = todos.filter((t) => t.completed);
-  const [pendingItems, setPendingItems] = useState(pending);
+  const [optimisticTodos, setOptimisticCompleted] = useOptimistic(
+    todos,
+    (state: Todo[], { id, completed }: { id: string; completed: boolean }) =>
+      state.map((t) => (t.id === id ? { ...t, completed } : t))
+  );
+
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
+
+  const pending = optimisticTodos.filter((t) => !t.completed);
+  const done = optimisticTodos.filter((t) => t.completed);
+
+  const pendingItems = dragOrder
+    ? dragOrder.map((id) => pending.find((t) => t.id === id)).filter((t): t is Todo => !!t)
+    : pending;
+
+  function handleToggle(id: string, currentCompleted: boolean) {
+    startTransition(async () => {
+      setOptimisticCompleted({ id, completed: !currentCompleted });
+      await toggleTodo(id, currentCompleted);
+    });
+  }
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -67,11 +93,13 @@ export default function TodoList({
     const oldIndex = pendingItems.findIndex((t) => t.id === active.id);
     const newIndex = pendingItems.findIndex((t) => t.id === over.id);
     const reordered = arrayMove(pendingItems, oldIndex, newIndex);
-    setPendingItems(reordered);
+
+    setDragOrder(reordered.map((t) => t.id));
     await reorderTodos(reordered.map((t) => t.id));
+    setDragOrder(null);
   }
 
-  if (todos.length === 0) {
+  if (optimisticTodos.length === 0) {
     return (
       <div className="py-12 text-center text-sm text-gray-400 dark:text-gray-600">
         할 일이 없습니다. 새 항목을 추가해보세요!
@@ -90,7 +118,7 @@ export default function TodoList({
             <SortableContext items={pendingItems.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <ul className="space-y-2">
                 {pendingItems.map((todo) => (
-                  <SortableItem key={todo.id} todo={todo} categories={categories} />
+                  <SortableItem key={todo.id} todo={todo} categories={categories} onToggle={handleToggle} />
                 ))}
               </ul>
             </SortableContext>
@@ -108,7 +136,7 @@ export default function TodoList({
               <li key={todo.id} className="flex items-center gap-1">
                 <span className="w-6" />
                 <div className="flex-1">
-                  <TodoItem todo={todo} categories={categories} />
+                  <TodoItem todo={todo} categories={categories} onToggle={handleToggle} />
                 </div>
               </li>
             ))}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Todo, Category } from "@/types/todo";
-import { toggleTodo, deleteTodo, updateTodo } from "@/app/actions";
+import { deleteTodo, updateTodo } from "@/app/actions";
 
 function getDday(dueDateStr: string): { label: string; color: string } {
   const today = new Date();
@@ -19,9 +19,11 @@ function getDday(dueDateStr: string): { label: string; color: string } {
 export default function TodoItem({
   todo,
   categories,
+  onToggle,
 }: {
   todo: Todo;
   categories: Category[];
+  onToggle: (id: string, completed: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(todo.title);
@@ -39,7 +41,7 @@ export default function TodoItem({
   return (
     <li className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
       <button
-        onClick={() => toggleTodo(todo.id, todo.completed)}
+        onClick={() => onToggle(todo.id, todo.completed)}
         className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
           todo.completed
             ? "border-blue-500 bg-blue-500"
