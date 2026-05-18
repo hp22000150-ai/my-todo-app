@@ -43,7 +43,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-900">
         <div className="flex-1">{children}</div>
         <footer className="py-4 text-center text-xs text-gray-400 dark:text-gray-600">
-          Produced by CONTENT FACTORY
+          Produced by CONTENT FACTORY · 2026.05.18
         </footer>
       </body>
     </html>
