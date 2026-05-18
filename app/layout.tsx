@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "My Todo App",
-    template: "%s | My Todo App",
+    default: "나의 일정관리",
+    template: "%s | 나의 일정관리",
   },
-  description: "로그인 후 할 일을 관리하고, 카테고리·마감일·검색 기능을 사용하세요.",
+  description: "나의 일정을 스마트하게 관리하세요. 카테고리·마감일·시간 설정·검색 기능 제공.",
   openGraph: {
-    title: "My Todo App",
-    description: "로그인 후 할 일을 관리하고, 카테고리·마감일·검색 기능을 사용하세요.",
+    title: "나의 일정관리",
+    description: "나의 일정을 스마트하게 관리하세요. 카테고리·마감일·시간 설정·검색 기능 제공.",
     type: "website",
     locale: "ko_KR",
   },

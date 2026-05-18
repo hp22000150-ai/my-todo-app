@@ -39,7 +39,7 @@ export default async function Home({
     <main className="mx-auto min-h-screen max-w-xl px-4 py-16">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          할 일 목록
+          나의 일정관리
         </h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">
