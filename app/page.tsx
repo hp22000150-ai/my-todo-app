@@ -72,7 +72,7 @@ export default async function Home({
           <ExportButton todos={(todos as Todo[]) ?? []} categories={(categories as Category[]) ?? []} />
           <ThemeToggle />
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {user?.email}
+            {user?.email?.split("@")[0]}
           </span>
           <form action={logout}>
             <button
