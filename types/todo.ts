@@ -15,6 +15,8 @@ export interface Todo {
   sort_order: number | null;
   category_id: string | null;
   due_time: string | null;
+  priority: 'high' | 'medium' | 'low' | null;
+  note: string | null;
   is_recurring: boolean;
   recurrence_days: number | null;
   created_at: string;

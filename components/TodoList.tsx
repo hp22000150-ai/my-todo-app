@@ -20,6 +20,8 @@ import { Todo, Category } from "@/types/todo";
 import TodoItem from "./TodoItem";
 import { toggleTodo, reorderTodos } from "@/app/actions";
 
+const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
 function SortableItem({
   todo,
   categories,
@@ -69,13 +71,23 @@ export default function TodoList({
   );
 
   const [dragOrder, setDragOrder] = useState<string[] | null>(null);
+  const [showDone, setShowDone] = useState(false);
 
   const pending = optimisticTodos.filter((t) => !t.completed);
   const done = optimisticTodos.filter((t) => t.completed);
 
-  const pendingItems = dragOrder
-    ? dragOrder.map((id) => pending.find((t) => t.id === id)).filter((t): t is Todo => !!t)
-    : pending;
+  const sortedPending = dragOrder
+    ? (dragOrder.map((id) => pending.find((t) => t.id === id)).filter(Boolean) as Todo[])
+    : [...pending].sort((a, b) => {
+        const pa = PRIORITY_ORDER[a.priority ?? "medium"];
+        const pb = PRIORITY_ORDER[b.priority ?? "medium"];
+        if (pa !== pb) return pa - pb;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      });
+
+  const total = optimisticTodos.length;
+  const doneCount = done.length;
+  const progress = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
   function handleToggle(id: string, currentCompleted: boolean) {
     startTransition(async () => {
@@ -90,9 +102,9 @@ export default function TodoList({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = pendingItems.findIndex((t) => t.id === active.id);
-    const newIndex = pendingItems.findIndex((t) => t.id === over.id);
-    const reordered = arrayMove(pendingItems, oldIndex, newIndex);
+    const oldIndex = sortedPending.findIndex((t) => t.id === active.id);
+    const newIndex = sortedPending.findIndex((t) => t.id === over.id);
+    const reordered = arrayMove(sortedPending, oldIndex, newIndex);
 
     setDragOrder(reordered.map((t) => t.id));
     await reorderTodos(reordered.map((t) => t.id));
@@ -109,15 +121,30 @@ export default function TodoList({
 
   return (
     <div className="space-y-4">
-      {pendingItems.length > 0 && (
+      {/* 진행률 바 */}
+      <div className="rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800/50">
+        <div className="mb-1.5 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>오늘의 진행률</span>
+          <span className="font-medium">{doneCount} / {total} 완료 ({progress}%)</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* 할 일 섹션 */}
+      {sortedPending.length > 0 && (
         <section>
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-600">
-            할 일 ({pendingItems.length})
+            할 일 ({sortedPending.length})
           </p>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={pendingItems.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={sortedPending.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <ul className="space-y-2">
-                {pendingItems.map((todo) => (
+                {sortedPending.map((todo) => (
                   <SortableItem key={todo.id} todo={todo} categories={categories} onToggle={handleToggle} />
                 ))}
               </ul>
@@ -126,21 +153,33 @@ export default function TodoList({
         </section>
       )}
 
+      {/* 완료 섹션 */}
       {done.length > 0 && (
         <section>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-600">
+          <button
+            onClick={() => setShowDone((v) => !v)}
+            className="mb-2 flex w-full items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400"
+          >
+            <svg
+              className={`h-3 w-3 transition-transform ${showDone ? "rotate-90" : ""}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
             완료 ({done.length})
-          </p>
-          <ul className="space-y-2">
-            {done.map((todo) => (
-              <li key={todo.id} className="flex items-center gap-1">
-                <span className="w-6" />
-                <div className="flex-1">
-                  <TodoItem todo={todo} categories={categories} onToggle={handleToggle} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          </button>
+          {showDone && (
+            <ul className="space-y-2">
+              {done.map((todo) => (
+                <li key={todo.id} className="flex items-center gap-1">
+                  <span className="w-6" />
+                  <div className="flex-1">
+                    <TodoItem todo={todo} categories={categories} onToggle={handleToggle} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
     </div>

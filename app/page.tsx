@@ -6,6 +6,7 @@ import AddTodo from "@/components/AddTodo";
 import TodoList from "@/components/TodoList";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function Home({
   searchParams,
@@ -63,6 +64,7 @@ export default async function Home({
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {user?.email}
           </span>

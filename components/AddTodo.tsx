@@ -4,14 +4,23 @@ import { useRef, useState } from "react";
 import { addTodo } from "@/app/actions";
 import { Category } from "@/types/todo";
 
+const PRIORITIES = [
+  { value: "high", label: "높음", color: "bg-red-500" },
+  { value: "medium", label: "보통", color: "bg-amber-400" },
+  { value: "low", label: "낮음", color: "bg-green-500" },
+] as const;
+
 export default function AddTodo({ categories }: { categories: Category[] }) {
   const ref = useRef<HTMLFormElement>(null);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
 
   async function handleSubmit(formData: FormData) {
+    formData.set("priority", priority);
     await addTodo(formData);
     ref.current?.reset();
     setIsRecurring(false);
+    setPriority("medium");
   }
 
   return (
@@ -58,7 +67,25 @@ export default function AddTodo({ categories }: { categories: Category[] }) {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1">
+          {PRIORITIES.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => setPriority(p.value)}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
+                priority === p.value
+                  ? "bg-gray-100 text-gray-700 ring-1 ring-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-500"
+                  : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${p.color}`} />
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <input
             type="checkbox"
@@ -76,7 +103,7 @@ export default function AddTodo({ categories }: { categories: Category[] }) {
             className="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-500 outline-none focus:border-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
           >
             <option value="1">매일</option>
-            <option value="7" defaultValue={7}>매주</option>
+            <option value="7">매주</option>
             <option value="14">격주</option>
             <option value="30">매월</option>
           </select>
