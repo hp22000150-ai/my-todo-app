@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Todo } from "@/types/todo";
+import { Todo, Category } from "@/types/todo";
 import { toggleTodo, deleteTodo, updateTodo } from "@/app/actions";
 
 function getDday(dueDateStr: string): { label: string; color: string } {
@@ -16,7 +16,13 @@ function getDday(dueDateStr: string): { label: string; color: string } {
   return { label: `D+${Math.abs(diff)}`, color: "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400" };
 }
 
-export default function TodoItem({ todo }: { todo: Todo }) {
+export default function TodoItem({
+  todo,
+  categories,
+}: {
+  todo: Todo;
+  categories: Category[];
+}) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(todo.title);
 
@@ -28,6 +34,7 @@ export default function TodoItem({ todo }: { todo: Todo }) {
   }
 
   const dday = todo.due_date && !todo.completed ? getDday(todo.due_date) : null;
+  const category = categories.find((c) => c.id === todo.category_id);
 
   return (
     <li className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
@@ -69,6 +76,15 @@ export default function TodoItem({ todo }: { todo: Todo }) {
             }`}
           >
             {todo.title}
+          </span>
+        )}
+
+        {category && (
+          <span
+            className="flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+            style={{ backgroundColor: category.color }}
+          >
+            {category.name}
           </span>
         )}
 

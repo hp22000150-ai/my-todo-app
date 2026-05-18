@@ -16,22 +16,18 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Todo } from "@/types/todo";
+import { Todo, Category } from "@/types/todo";
 import TodoItem from "./TodoItem";
 import { reorderTodos } from "@/app/actions";
 
-function SortableItem({ todo }: { todo: Todo }) {
+function SortableItem({ todo, categories }: { todo: Todo; categories: Category[] }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: todo.id });
 
   return (
     <li
       ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-      }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
       className="flex items-center gap-1"
     >
       <button
@@ -45,13 +41,19 @@ function SortableItem({ todo }: { todo: Todo }) {
         </svg>
       </button>
       <div className="flex-1">
-        <TodoItem todo={todo} />
+        <TodoItem todo={todo} categories={categories} />
       </div>
     </li>
   );
 }
 
-export default function TodoList({ todos }: { todos: Todo[] }) {
+export default function TodoList({
+  todos,
+  categories,
+}: {
+  todos: Todo[];
+  categories: Category[];
+}) {
   const pending = todos.filter((t) => !t.completed);
   const done = todos.filter((t) => t.completed);
   const [pendingItems, setPendingItems] = useState(pending);
@@ -88,7 +90,7 @@ export default function TodoList({ todos }: { todos: Todo[] }) {
             <SortableContext items={pendingItems.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <ul className="space-y-2">
                 {pendingItems.map((todo) => (
-                  <SortableItem key={todo.id} todo={todo} />
+                  <SortableItem key={todo.id} todo={todo} categories={categories} />
                 ))}
               </ul>
             </SortableContext>
@@ -106,7 +108,7 @@ export default function TodoList({ todos }: { todos: Todo[] }) {
               <li key={todo.id} className="flex items-center gap-1">
                 <span className="w-6" />
                 <div className="flex-1">
-                  <TodoItem todo={todo} />
+                  <TodoItem todo={todo} categories={categories} />
                 </div>
               </li>
             ))}

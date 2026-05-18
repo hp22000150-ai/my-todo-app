@@ -14,6 +14,7 @@ export async function addTodo(formData: FormData) {
   if (!user) return;
 
   const dueDate = formData.get("due_date") as string;
+  const categoryId = formData.get("category_id") as string;
 
   const { data: last } = await supabase
     .from("todos")
@@ -29,6 +30,7 @@ export async function addTodo(formData: FormData) {
     title: title.trim(),
     user_id: user.id,
     due_date: dueDate || null,
+    category_id: categoryId || null,
     sort_order: nextOrder,
   });
 

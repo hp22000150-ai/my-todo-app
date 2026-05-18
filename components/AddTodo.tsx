@@ -2,8 +2,9 @@
 
 import { useRef } from "react";
 import { addTodo } from "@/app/actions";
+import { Category } from "@/types/todo";
 
-export default function AddTodo() {
+export default function AddTodo({ categories }: { categories: Category[] }) {
   const ref = useRef<HTMLFormElement>(null);
 
   async function handleSubmit(formData: FormData) {
@@ -28,11 +29,26 @@ export default function AddTodo() {
           추가
         </button>
       </div>
-      <input
-        name="due_date"
-        type="date"
-        className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
-      />
+      <div className="flex gap-2">
+        <input
+          name="due_date"
+          type="date"
+          className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+        />
+        {categories.length > 0 && (
+          <select
+            name="category_id"
+            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-500 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+          >
+            <option value="">카테고리 없음</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
     </form>
   );
 }

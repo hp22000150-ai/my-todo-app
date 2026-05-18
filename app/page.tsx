@@ -1,21 +1,39 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { Todo } from "@/types/todo";
+import { Todo, Category } from "@/types/todo";
 import { logout } from "@/app/auth/actions";
 import AddTodo from "@/components/AddTodo";
 import TodoList from "@/components/TodoList";
+import SearchBar from "@/components/SearchBar";
+import CategoryFilter from "@/components/CategoryFilter";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string }>;
+}) {
+  const { q, category } = await searchParams;
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: todos } = await supabase
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  let query = supabase
     .from("todos")
     .select("*")
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
+
+  if (q) query = query.ilike("title", `%${q}%`);
+  if (category) query = query.eq("category_id", category);
+
+  const { data: todos } = await query;
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-4 py-16">
@@ -38,9 +56,21 @@ export default async function Home() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <AddTodo />
-        <TodoList todos={(todos as Todo[]) ?? []} />
+      <div className="space-y-4">
+        <AddTodo categories={(categories as Category[]) ?? []} />
+
+        <Suspense>
+          <SearchBar />
+        </Suspense>
+
+        <Suspense>
+          <CategoryFilter categories={(categories as Category[]) ?? []} />
+        </Suspense>
+
+        <TodoList
+          todos={(todos as Todo[]) ?? []}
+          categories={(categories as Category[]) ?? []}
+        />
       </div>
     </main>
   );
