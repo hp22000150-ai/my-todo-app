@@ -3,7 +3,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function login(formData: FormData) {
+export type AuthState = { error?: string; message?: string } | undefined;
+
+export async function login(
+  prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -11,14 +16,15 @@ export async function login(formData: FormData) {
     password: formData.get("password") as string,
   });
 
-  if (error) {
-    redirect("/login?error=" + encodeURIComponent(error.message));
-  }
+  if (error) return { error: error.message };
 
   redirect("/");
 }
 
-export async function signup(formData: FormData) {
+export async function signup(
+  prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signUp({
@@ -26,11 +32,9 @@ export async function signup(formData: FormData) {
     password: formData.get("password") as string,
   });
 
-  if (error) {
-    redirect("/signup?error=" + encodeURIComponent(error.message));
-  }
+  if (error) return { error: error.message };
 
-  redirect("/signup?message=이메일을 확인해 계정을 활성화하세요.");
+  return { message: "이메일을 확인해 계정을 활성화하세요." };
 }
 
 export async function logout() {

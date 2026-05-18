@@ -2,7 +2,25 @@
   "permissions": {
     "allow": [
       "Bash(ls \"c:\\\\Users\\\\USER\\\\AI파운더스\")",
-      "Read(//c/Users/USER/AI파운더스/**)"
+      "Read(//c/Users/USER/AI파운더스/**)",
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__list_tables",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(Get-CimInstance Win32_ComputerSystem | Select-Object -ExpandProperty TotalPhysicalMemory | ForEach-Object { \"$\\([math]::Round\\($_ / 1GB, 1\\)\\) GB\" })",
+      "Bash(npm run *)",
+      "PowerShell(Stop-Process -Id 5016 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 5016 -Force -Confirm:$false 2>$null)",
+      "PowerShell(exit 0)",
+      "PowerShell($pids = \\(netstat -ano | findstr \":3001 \" | ForEach-Object { $_.Trim\\(\\).Split\\(\\)[-1] } | Sort-Object -Unique\\); foreach \\($p in $pids\\) { try { Stop-Process -Id $p -Force -Confirm:$false -ErrorAction Stop } catch {} }; Write-Output \"Done\")",
+      "Bash(gh api *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

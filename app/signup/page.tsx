@@ -1,11 +1,12 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
 import { signup } from "@/app/auth/actions";
 
-export default function SignupPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; message?: string }>;
-}) {
+export default function SignupPage() {
+  const [state, action, pending] = useActionState(signup, undefined);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
       <div className="w-full max-w-sm">
@@ -13,7 +14,7 @@ export default function SignupPage({
           회원가입
         </h1>
 
-        <form action={signup} className="space-y-4">
+        <form action={action} className="space-y-4">
           <div>
             <label
               htmlFor="email"
@@ -49,13 +50,23 @@ export default function SignupPage({
             />
           </div>
 
-          <AuthMessage searchParams={searchParams} />
+          {state?.error && (
+            <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+              {state.error}
+            </p>
+          )}
+          {state?.message && (
+            <p className="rounded-lg bg-green-50 px-4 py-2 text-sm text-green-600 dark:bg-green-900/20 dark:text-green-400">
+              {state.message}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-blue-500 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 active:bg-blue-700"
+            disabled={pending}
+            className="w-full rounded-lg bg-blue-500 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 active:bg-blue-700 disabled:opacity-60"
           >
-            가입하기
+            {pending ? "처리 중..." : "가입하기"}
           </button>
         </form>
 
@@ -71,27 +82,4 @@ export default function SignupPage({
       </div>
     </main>
   );
-}
-
-async function AuthMessage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; message?: string }>;
-}) {
-  const { error, message } = await searchParams;
-  if (error) {
-    return (
-      <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-        {error}
-      </p>
-    );
-  }
-  if (message) {
-    return (
-      <p className="rounded-lg bg-green-50 px-4 py-2 text-sm text-green-600 dark:bg-green-900/20 dark:text-green-400">
-        {message}
-      </p>
-    );
-  }
-  return null;
 }

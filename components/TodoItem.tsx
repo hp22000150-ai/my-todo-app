@@ -1,9 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import { Todo } from "@/types/todo";
-import { toggleTodo, deleteTodo } from "@/app/actions";
+import { toggleTodo, deleteTodo, updateTodo } from "@/app/actions";
+
+function getDday(dueDateStr: string): { label: string; color: string } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDateStr);
+  due.setHours(0, 0, 0, 0);
+  const diff = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diff === 0) return { label: "D-day", color: "bg-red-500 text-white" };
+  if (diff > 0) return { label: `D-${diff}`, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300" };
+  return { label: `D+${Math.abs(diff)}`, color: "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400" };
+}
 
 export default function TodoItem({ todo }: { todo: Todo }) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(todo.title);
+
+  async function handleEdit() {
+    if (editValue.trim() && editValue !== todo.title) {
+      await updateTodo(todo.id, editValue);
+    }
+    setEditing(false);
+  }
+
+  const dday = todo.due_date && !todo.completed ? getDday(todo.due_date) : null;
+
   return (
     <li className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
       <button
@@ -22,15 +47,49 @@ export default function TodoItem({ todo }: { todo: Todo }) {
         )}
       </button>
 
-      <span
-        className={`flex-1 text-sm ${
-          todo.completed
-            ? "text-gray-400 line-through dark:text-gray-500"
-            : "text-gray-700 dark:text-gray-200"
-        }`}
-      >
-        {todo.title}
-      </span>
+      <div className="flex flex-1 items-center gap-2 min-w-0">
+        {editing ? (
+          <input
+            autoFocus
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleEdit();
+              if (e.key === "Escape") { setEditValue(todo.title); setEditing(false); }
+            }}
+            className="flex-1 rounded border border-blue-400 px-2 py-0.5 text-sm outline-none focus:ring-2 focus:ring-blue-100 dark:bg-gray-700 dark:text-white"
+          />
+        ) : (
+          <span
+            className={`flex-1 truncate text-sm ${
+              todo.completed
+                ? "text-gray-400 line-through dark:text-gray-500"
+                : "text-gray-700 dark:text-gray-200"
+            }`}
+          >
+            {todo.title}
+          </span>
+        )}
+
+        {dday && (
+          <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${dday.color}`}>
+            {dday.label}
+          </span>
+        )}
+      </div>
+
+      {!editing && (
+        <button
+          onClick={() => setEditing(true)}
+          className="text-gray-300 transition-colors hover:text-blue-400 dark:text-gray-600 dark:hover:text-blue-400"
+          aria-label="편집"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
+      )}
 
       <button
         onClick={() => deleteTodo(todo.id)}
