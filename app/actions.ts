@@ -8,7 +8,14 @@ export async function addTodo(formData: FormData) {
   if (!title?.trim()) return;
 
   const supabase = await createClient();
-  await supabase.from("todos").insert({ title: title.trim() });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("todos")
+    .insert({ title: title.trim(), user_id: user.id });
   revalidatePath("/");
 }
 
