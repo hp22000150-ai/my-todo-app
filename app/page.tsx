@@ -48,7 +48,7 @@ export default async function Home({
             <span className="cursor-help border-b border-dashed border-gray-300 pb-px text-xs text-gray-400 dark:border-gray-600 dark:text-gray-500">
               앱 사용 방법
             </span>
-            <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 hidden w-72 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-2xl group-hover:block dark:border-gray-700 dark:bg-gray-800">
+            <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 hidden w-[420px] rounded-xl border border-gray-200 bg-white p-4 text-left shadow-2xl group-hover:block dark:border-gray-700 dark:bg-gray-800">
               <p className="mb-3 text-xs font-semibold text-gray-700 dark:text-gray-200">📋 나의 일정관리 사용법</p>
               <ul className="space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
                 <li>✅ <b>동그라미 버튼</b> — 일정 완료 / 취소</li>
