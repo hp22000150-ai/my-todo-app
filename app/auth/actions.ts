@@ -62,7 +62,8 @@ export async function requestPasswordReset(
   const headersList = await headers();
   const host = headersList.get("host");
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const redirectTo = `${protocol}://${host}/auth/callback?next=/reset-password`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
+  const redirectTo = `${siteUrl}/auth/callback?next=/reset-password`;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
