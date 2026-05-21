@@ -1,12 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { login, guestLogin } from "@/app/auth/actions";
+import { login } from "@/app/auth/actions";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined);
-  const [guestState, guestAction, guestPending] = useActionState(guestLogin, undefined);
+  const [guestError, setGuestError] = useState<string | null>(null);
+  const [guestPending, startGuestTransition] = useTransition();
+  const router = useRouter();
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
@@ -71,20 +75,31 @@ export default function LoginPage() {
           <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
         </div>
 
-        <form action={guestAction}>
-          {guestState?.error && (
-            <p className="mb-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-              {guestState.error}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={guestPending}
-            className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {guestPending ? "입장 중..." : "비회원으로 시작하기"}
-          </button>
-        </form>
+        {guestError && (
+          <p className="mb-2 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            {guestError}
+          </p>
+        )}
+        <button
+          type="button"
+          disabled={guestPending}
+          onClick={() => {
+            setGuestError(null);
+            startGuestTransition(async () => {
+              const supabase = createClient();
+              const { error } = await supabase.auth.signInAnonymously();
+              if (error) {
+                setGuestError(`비회원 로그인 실패: ${error.message}`);
+              } else {
+                router.push("/");
+                router.refresh();
+              }
+            });
+          }}
+          className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {guestPending ? "입장 중..." : "비회원으로 시작하기"}
+        </button>
 
         <div className="mt-6 space-y-2 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>
