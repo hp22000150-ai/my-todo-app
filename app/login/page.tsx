@@ -98,7 +98,7 @@ export default function LoginPage() {
           }}
           className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
-          {guestPending ? "입장 중..." : "비회원으로 시작하기"}
+          {guestPending ? "입장 중..." : "테스트 해보기"}
         </button>
 
         <div className="mt-6 space-y-2 text-center text-sm text-gray-500 dark:text-gray-400">
