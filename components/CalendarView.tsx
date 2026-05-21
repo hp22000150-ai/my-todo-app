@@ -21,6 +21,7 @@ export default function CalendarView({
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   const firstDow = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -106,10 +107,16 @@ export default function CalendarView({
             const isSelected = selectedDate === dateStr;
             const dow = (firstDow + day - 1) % 7;
 
+            const hovered = hoveredDate === dateStr;
+            const colIndex = (firstDow + day - 1) % 7;
+            const isRightEdge = colIndex >= 5;
+
             return (
               <div
                 key={i}
                 onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                onMouseEnter={() => dayTodos.length > 0 && setHoveredDate(dateStr)}
+                onMouseLeave={() => setHoveredDate(null)}
                 className={`relative h-16 cursor-pointer border-b border-r border-gray-50 p-1 transition-colors last:border-r-0 dark:border-gray-700/50 ${
                   isSelected
                     ? "bg-blue-50 dark:bg-blue-900/20"
@@ -129,7 +136,7 @@ export default function CalendarView({
                 >
                   {day}
                 </span>
-                {/* 할 일 점/뱃지 */}
+                {/* 할 일 점 */}
                 <div className="mt-0.5 flex flex-wrap gap-0.5">
                   {dayTodos.slice(0, 3).map((t) => (
                     <span
@@ -143,6 +150,53 @@ export default function CalendarView({
                     <span className="text-[10px] text-gray-400">+{dayTodos.length - 3}</span>
                   )}
                 </div>
+
+                {/* 호버 팝업 */}
+                {hovered && (
+                  <div
+                    className={`pointer-events-none absolute bottom-full z-30 mb-2 w-52 rounded-xl border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-600 dark:bg-gray-800 ${
+                      isRightEdge ? "right-0" : "left-0"
+                    }`}
+                  >
+                    <p className="mb-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                      {month + 1}/{day} 일정 ({dayTodos.length})
+                    </p>
+                    <ul className="space-y-1.5">
+                      {dayTodos.map((t) => {
+                        const cat = categories.find((c) => c.id === t.category_id);
+                        return (
+                          <li key={t.id} className="flex items-start gap-1.5">
+                            <span
+                              className={`mt-0.5 h-2 w-2 flex-shrink-0 rounded-full ${
+                                t.completed ? "bg-gray-300" : PRIORITY_COLORS[t.priority ?? "medium"]
+                              }`}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className={`block truncate text-xs ${t.completed ? "line-through text-gray-400" : "text-gray-700 dark:text-gray-200"}`}>
+                                {t.title}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {t.due_time && (
+                                  <span className="text-[10px] text-gray-400">⏰ {t.due_time}</span>
+                                )}
+                                {cat && (
+                                  <span
+                                    className="rounded-full px-1.5 py-px text-[10px] font-medium text-white"
+                                    style={{ backgroundColor: cat.color }}
+                                  >
+                                    {cat.name}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {/* 말풍선 꼬리 */}
+                    <div className={`absolute top-full h-2 w-2 -translate-y-1 rotate-45 border-b border-r border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800 ${isRightEdge ? "right-4" : "left-4"}`} />
+                  </div>
+                )}
               </div>
             );
           })}
