@@ -89,10 +89,13 @@ export async function updatePassword(
   redirect("/");
 }
 
-export async function guestLogin(): Promise<AuthState> {
+export async function guestLogin(
+  _prevState: AuthState,
+  _formData: FormData
+): Promise<AuthState> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInAnonymously();
-  if (error) return { error: "비회원 로그인 중 오류가 발생했습니다." };
+  if (error) return { error: `비회원 로그인 실패: ${error.message}` };
   redirect("/");
 }
 
