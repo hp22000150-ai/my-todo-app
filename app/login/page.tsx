@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import Link from "next/link";
-import { login } from "@/app/auth/actions";
+import { login, guestLogin } from "@/app/auth/actions";
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined);
+  const [guestPending, startGuestTransition] = useTransition();
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
@@ -63,6 +64,21 @@ export default function LoginPage() {
             {pending ? "로그인 중..." : "로그인"}
           </button>
         </form>
+
+        <div className="relative my-6 flex items-center">
+          <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+          <span className="mx-3 text-xs text-gray-400 dark:text-gray-600">또는</span>
+          <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+        </div>
+
+        <button
+          type="button"
+          disabled={guestPending}
+          onClick={() => startGuestTransition(() => guestLogin())}
+          className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {guestPending ? "입장 중..." : "비회원으로 시작하기"}
+        </button>
 
         <div className="mt-6 space-y-2 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>

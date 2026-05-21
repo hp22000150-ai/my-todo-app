@@ -73,7 +73,7 @@ export default async function Home({
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              {user?.email?.split("@")[0]}
+              {user?.is_anonymous ? "비회원" : user?.email?.split("@")[0]}
             </span>
             <form action={logout}>
               <button
