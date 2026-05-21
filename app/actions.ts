@@ -114,3 +114,36 @@ export async function reorderTodos(ids: string[]) {
   );
   revalidatePath("/");
 }
+
+export async function addSubtask(todoId: string, title: string) {
+  if (!title.trim()) return;
+  const supabase = await createClient();
+  const { data: last } = await supabase
+    .from("subtasks")
+    .select("sort_order")
+    .eq("todo_id", todoId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .single();
+  await supabase.from("subtasks").insert({
+    todo_id: todoId,
+    title: title.trim(),
+    sort_order: (last?.sort_order ?? -1) + 1,
+  });
+  revalidatePath("/");
+  revalidatePath("/calendar");
+}
+
+export async function toggleSubtask(id: string, completed: boolean) {
+  const supabase = await createClient();
+  await supabase.from("subtasks").update({ completed: !completed }).eq("id", id);
+  revalidatePath("/");
+  revalidatePath("/calendar");
+}
+
+export async function deleteSubtask(id: string) {
+  const supabase = await createClient();
+  await supabase.from("subtasks").delete().eq("id", id);
+  revalidatePath("/");
+  revalidatePath("/calendar");
+}

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { Todo, Category } from "@/types/todo";
+import { Todo, Category, Subtask } from "@/types/todo";
+import Link from "next/link";
 import { logout } from "@/app/auth/actions";
 import TodoList from "@/components/TodoList";
 import AddTodoModal from "@/components/AddTodoModal";
@@ -36,6 +37,11 @@ export default async function Home({
   if (category) query = query.eq("category_id", category);
 
   const { data: todos } = await query;
+
+  const todoIds = (todos ?? []).map((t) => t.id);
+  const { data: subtasks } = todoIds.length > 0
+    ? await supabase.from("subtasks").select("*").in("todo_id", todoIds).order("sort_order", { ascending: true })
+    : { data: [] };
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-4 pt-10 pb-16">
@@ -88,6 +94,19 @@ export default async function Home({
         </div>
       </div>
 
+      {/* 뷰 탭 */}
+      <div className="mb-4 flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+        <span className="flex-1 rounded-lg bg-white py-1.5 text-center text-sm font-medium text-gray-800 shadow-sm dark:bg-gray-700 dark:text-white">
+          목록
+        </span>
+        <Link href="/calendar" className="flex-1 rounded-lg py-1.5 text-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+          캘린더
+        </Link>
+        <Link href="/stats" className="flex-1 rounded-lg py-1.5 text-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+          통계
+        </Link>
+      </div>
+
       <div className="space-y-4">
         <AddTodoModal categories={(categories as Category[]) ?? []} />
 
@@ -102,6 +121,7 @@ export default async function Home({
         <TodoList
           todos={(todos as Todo[]) ?? []}
           categories={(categories as Category[]) ?? []}
+          subtasks={(subtasks as Subtask[]) ?? []}
         />
       </div>
     </main>

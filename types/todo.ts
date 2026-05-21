@@ -6,6 +6,15 @@ export interface Category {
   created_at: string;
 }
 
+export interface Subtask {
+  id: string;
+  todo_id: string;
+  title: string;
+  completed: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface Todo {
   id: string;
   user_id: string;

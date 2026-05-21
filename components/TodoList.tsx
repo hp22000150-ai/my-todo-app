@@ -16,7 +16,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Todo, Category } from "@/types/todo";
+import { Todo, Category, Subtask } from "@/types/todo";
 import TodoItem from "./TodoItem";
 import { toggleTodo, reorderTodos } from "@/app/actions";
 
@@ -25,10 +25,12 @@ const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 function SortableItem({
   todo,
   categories,
+  subtasks,
   onToggle,
 }: {
   todo: Todo;
   categories: Category[];
+  subtasks: Subtask[];
   onToggle: (id: string, completed: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -51,7 +53,7 @@ function SortableItem({
         </svg>
       </button>
       <div className="flex-1">
-        <TodoItem todo={todo} categories={categories} onToggle={onToggle} />
+        <TodoItem todo={todo} categories={categories} subtasks={subtasks} onToggle={onToggle} />
       </div>
     </li>
   );
@@ -60,9 +62,11 @@ function SortableItem({
 export default function TodoList({
   todos,
   categories,
+  subtasks,
 }: {
   todos: Todo[];
   categories: Category[];
+  subtasks: Subtask[];
 }) {
   const [optimisticTodos, setOptimisticCompleted] = useOptimistic(
     todos,
@@ -145,7 +149,7 @@ export default function TodoList({
             <SortableContext items={sortedPending.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <ul className="space-y-2">
                 {sortedPending.map((todo) => (
-                  <SortableItem key={todo.id} todo={todo} categories={categories} onToggle={handleToggle} />
+                  <SortableItem key={todo.id} todo={todo} categories={categories} subtasks={subtasks.filter(s => s.todo_id === todo.id)} onToggle={handleToggle} />
                 ))}
               </ul>
             </SortableContext>
@@ -174,7 +178,7 @@ export default function TodoList({
                 <li key={todo.id} className="flex items-center gap-1">
                   <span className="w-6" />
                   <div className="flex-1">
-                    <TodoItem todo={todo} categories={categories} onToggle={handleToggle} />
+                    <TodoItem todo={todo} categories={categories} subtasks={subtasks.filter(s => s.todo_id === todo.id)} onToggle={handleToggle} />
                   </div>
                 </li>
               ))}

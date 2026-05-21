@@ -20,7 +20,8 @@
       "PowerShell(exit 0)",
       "PowerShell($pids = \\(netstat -ano | findstr \":3001 \" | ForEach-Object { $_.Trim\\(\\).Split\\(\\)[-1] } | Sort-Object -Unique\\); foreach \\($p in $pids\\) { try { Stop-Process -Id $p -Force -Confirm:$false -ErrorAction Stop } catch {} }; Write-Output \"Done\")",
       "Bash(gh api *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(node -e ' *)"
     ]
   }
 }

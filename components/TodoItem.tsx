@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Todo, Category } from "@/types/todo";
-import { deleteTodo, updateTodo } from "@/app/actions";
+import { useState, useRef } from "react";
+import { Todo, Category, Subtask } from "@/types/todo";
+import { deleteTodo, updateTodo, addSubtask, toggleSubtask, deleteSubtask } from "@/app/actions";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -113,13 +113,17 @@ function DdayBadge({ dueDateStr, dueTime }: { dueDateStr: string; dueTime: strin
 export default function TodoItem({
   todo,
   categories,
+  subtasks,
   onToggle,
 }: {
   todo: Todo;
   categories: Category[];
+  subtasks: Subtask[];
   onToggle: (id: string, completed: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  const subtaskInputRef = useRef<HTMLInputElement>(null);
   const [editTitle, setEditTitle] = useState(todo.title);
 
   const { dateOnly: initDate } = todo.due_date ? parseDueDate(todo.due_date) : { dateOnly: "" };
@@ -276,6 +280,76 @@ export default function TodoItem({
               <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
                 {todo.note}
               </p>
+            )}
+
+            {/* 서브태스크 토글 버튼 */}
+            <button
+              onClick={() => setShowSubtasks((v) => !v)}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 dark:text-gray-600 dark:hover:text-blue-400 transition-colors"
+            >
+              <svg className={`h-3 w-3 transition-transform ${showSubtasks ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+              세부 항목
+              {subtasks.length > 0 && (
+                <span className="ml-1 font-medium text-blue-400">
+                  {subtasks.filter(s => s.completed).length}/{subtasks.length}
+                </span>
+              )}
+            </button>
+
+            {showSubtasks && (
+              <div className="mt-1 space-y-1 pl-1">
+                {subtasks.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 group">
+                    <button
+                      onClick={() => toggleSubtask(s.id, s.completed)}
+                      className={`h-4 w-4 flex-shrink-0 rounded border transition-colors ${
+                        s.completed
+                          ? "border-blue-500 bg-blue-500"
+                          : "border-gray-300 hover:border-blue-400 dark:border-gray-600"
+                      } flex items-center justify-center`}
+                    >
+                      {s.completed && (
+                        <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    <span className={`flex-1 text-xs ${s.completed ? "line-through text-gray-400" : "text-gray-600 dark:text-gray-300"}`}>
+                      {s.title}
+                    </span>
+                    <button
+                      onClick={() => deleteSubtask(s.id)}
+                      className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const input = subtaskInputRef.current;
+                    if (!input?.value.trim()) return;
+                    await addSubtask(todo.id, input.value);
+                    input.value = "";
+                  }}
+                  className="flex items-center gap-1.5 pt-0.5"
+                >
+                  <input
+                    ref={subtaskInputRef}
+                    type="text"
+                    placeholder="세부 항목 추가..."
+                    className="flex-1 rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-blue-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-500"
+                  />
+                  <button type="submit" className="text-xs text-blue-500 hover:text-blue-600 font-medium">
+                    추가
+                  </button>
+                </form>
+              </div>
             )}
           </>
         )}
