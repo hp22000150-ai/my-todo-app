@@ -17,6 +17,7 @@ export async function addTodo(formData: FormData) {
   const dueTime = formData.get("due_time") as string;
   const categoryId = formData.get("category_id") as string;
   const priority = (formData.get("priority") as string) || "medium";
+  const note = (formData.get("note") as string) || null;
   const isRecurring = formData.get("is_recurring") === "on";
   const recurrenceDays = isRecurring
     ? parseInt(formData.get("recurrence_days") as string) || 7
@@ -39,6 +40,7 @@ export async function addTodo(formData: FormData) {
     due_time: (dueDate && dueTime) ? dueTime : null,
     category_id: categoryId || null,
     priority,
+    note: note || null,
     sort_order: nextOrder,
     is_recurring: isRecurring,
     recurrence_days: recurrenceDays,
@@ -85,6 +87,7 @@ export async function updateTodo(
   dueTime?: string | null,
   priority?: string | null,
   note?: string | null,
+  categoryId?: string | null,
 ) {
   if (!title?.trim()) return;
   const supabase = await createClient();
@@ -95,6 +98,7 @@ export async function updateTodo(
   }
   if (priority !== undefined) patch.priority = priority || "medium";
   if (note !== undefined) patch.note = note || null;
+  if (categoryId !== undefined) patch.category_id = categoryId || null;
   await supabase.from("todos").update(patch).eq("id", id);
   revalidatePath("/");
 }
@@ -102,6 +106,14 @@ export async function updateTodo(
 export async function deleteTodo(id: string) {
   const supabase = await createClient();
   await supabase.from("todos").delete().eq("id", id);
+  revalidatePath("/");
+}
+
+export async function deleteCompletedTodos() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from("todos").delete().eq("user_id", user.id).eq("completed", true);
   revalidatePath("/");
 }
 

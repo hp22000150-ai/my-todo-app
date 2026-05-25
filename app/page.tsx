@@ -9,13 +9,14 @@ import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
 import ThemeToggle from "@/components/ThemeToggle";
 import ExportButton from "@/components/ExportButton";
+import NotificationManager from "@/components/NotificationManager";
 
 export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const { q, category } = await searchParams;
+  const { q, category, filter } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -35,6 +36,21 @@ export default async function Home({
 
   if (q) query = query.ilike("title", `%${q}%`);
   if (category) query = query.eq("category_id", category);
+  if (filter === "today" || filter === "week") {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const toStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const today = new Date();
+    if (filter === "today") {
+      query = query.eq("due_date", toStr(today));
+    } else {
+      const day = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      query = query.gte("due_date", toStr(monday)).lte("due_date", toStr(sunday));
+    }
+  }
 
   const { data: todos } = await query;
 
@@ -45,15 +61,19 @@ export default async function Home({
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-4 pt-10 pb-16">
+      <NotificationManager todos={(todos as Todo[]) ?? []} />
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             나의 일정관리
           </h1>
           <div className="group relative mt-1 inline-block">
-            <span className="cursor-help border-b border-dashed border-gray-300 pb-px text-xs text-gray-400 dark:border-gray-600 dark:text-gray-500">
-              앱 사용 방법
-            </span>
+            <button className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              사용 방법
+            </button>
             <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 hidden w-[350px] rounded-xl border border-gray-200 bg-white p-4 text-left shadow-2xl group-hover:block dark:border-gray-700 dark:bg-gray-800">
               <p className="mb-3 text-xs font-semibold text-gray-700 dark:text-gray-200">📋 나의 일정관리 사용법</p>
               <ul className="space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
@@ -64,10 +84,15 @@ export default async function Home({
                 <li>☰ <b>드래그 핸들</b> — 순서 변경</li>
                 <li>🔴 <b>우선순위</b> — 높음·보통·낮음 설정, 자동 정렬</li>
                 <li>🏷️ <b>카테고리</b> — 색깔별 분류 및 필터</li>
+                <li>📅 <b>오늘 / 이번 주</b> — 날짜별 빠른 필터 버튼</li>
                 <li>🔍 <b>검색창</b> — 키워드로 일정 검색</li>
                 <li>📅 <b>D-day 뱃지</b> — 마우스 올리면 달력 표시</li>
+                <li>🔴 <b>빨간 테두리</b> — 마감일이 지난 일정 자동 표시</li>
                 <li>🔁 <b>반복 설정</b> — 완료 시 다음 주기 자동 생성</li>
                 <li>📊 <b>진행률 바</b> — 전체 완료 현황 표시</li>
+                <li>🔗 <b>메모 URL</b> — 메모에 링크 입력 시 클릭 가능</li>
+                <li>✅ <b>완료 목록</b> — 완료된 일정 접기/펼치기, 전체 삭제 가능</li>
+                <li>🔔 <b>브라우저 알림</b> — 마감 1시간 전 자동 알림</li>
                 <li>🌙 <b>달/해 버튼</b> — 다크/라이트 모드 전환</li>
                 <li>⬇️ <b>내보내기 버튼</b> — 일정을 CSV 파일로 저장</li>
               </ul>

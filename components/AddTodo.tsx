@@ -20,6 +20,8 @@ export default function AddTodo({
   const ref = useRef<HTMLFormElement>(null);
   const [isRecurring, setIsRecurring] = useState(false);
   const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   async function handleSubmit(formData: FormData) {
     formData.set("priority", priority);
@@ -52,6 +54,7 @@ export default function AddTodo({
         <input
           name="due_date"
           type="date"
+          defaultValue={todayStr}
           className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
         />
         <input
@@ -73,6 +76,13 @@ export default function AddTodo({
           </select>
         )}
       </div>
+
+      <textarea
+        name="note"
+        placeholder="메모 (선택, URL 입력 시 클릭 가능)"
+        rows={2}
+        className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 resize-none"
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1">

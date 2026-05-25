@@ -19,13 +19,26 @@ export default function CategoryFilter({ categories }: { categories: Category[] 
   const formRef = useRef<HTMLFormElement>(null);
 
   const activeCategory = searchParams.get("category");
+  const activeFilter = searchParams.get("filter");
 
   function handleFilter(categoryId: string | null) {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("filter");
     if (categoryId) {
       params.set("category", categoryId);
     } else {
       params.delete("category");
+    }
+    startTransition(() => router.replace(`${pathname}?${params.toString()}`));
+  }
+
+  function handleQuickFilter(filter: string | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("category");
+    if (filter) {
+      params.set("filter", filter);
+    } else {
+      params.delete("filter");
     }
     startTransition(() => router.replace(`${pathname}?${params.toString()}`));
   }
@@ -39,9 +52,29 @@ export default function CategoryFilter({ categories }: { categories: Category[] 
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => handleFilter(null)}
+          onClick={() => handleQuickFilter("today")}
           className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-            !activeCategory
+            activeFilter === "today"
+              ? "bg-blue-500 text-white"
+              : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300"
+          }`}
+        >
+          오늘
+        </button>
+        <button
+          onClick={() => handleQuickFilter("week")}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            activeFilter === "week"
+              ? "bg-violet-500 text-white"
+              : "bg-violet-50 text-violet-600 hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300"
+          }`}
+        >
+          이번 주
+        </button>
+        <button
+          onClick={() => { handleFilter(null); handleQuickFilter(null); }}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            !activeCategory && !activeFilter
               ? "bg-gray-800 text-white dark:bg-white dark:text-gray-900"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
           }`}

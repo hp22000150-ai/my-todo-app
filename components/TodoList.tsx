@@ -18,7 +18,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Todo, Category, Subtask } from "@/types/todo";
 import TodoItem from "./TodoItem";
-import { toggleTodo, reorderTodos } from "@/app/actions";
+import { toggleTodo, reorderTodos, deleteCompletedTodos } from "@/app/actions";
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
@@ -128,7 +128,7 @@ export default function TodoList({
       {/* 진행률 바 */}
       <div className="rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800/50">
         <div className="mb-1.5 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>오늘의 진행률</span>
+          <span>전체 진행률</span>
           <span className="font-medium">{doneCount} / {total} 완료 ({progress}%)</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
@@ -160,9 +160,10 @@ export default function TodoList({
       {/* 완료 섹션 */}
       {done.length > 0 && (
         <section>
+          <div className="mb-2 flex items-center justify-between">
           <button
             onClick={() => setShowDone((v) => !v)}
-            className="mb-2 flex w-full items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400"
+            className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400"
           >
             <svg
               className={`h-3 w-3 transition-transform ${showDone ? "rotate-90" : ""}`}
@@ -172,6 +173,13 @@ export default function TodoList({
             </svg>
             완료 ({done.length})
           </button>
+          <button
+            onClick={() => deleteCompletedTodos()}
+            className="text-xs text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-500 transition-colors"
+          >
+            전체 삭제
+          </button>
+          </div>
           {showDone && (
             <ul className="space-y-2">
               {done.map((todo) => (

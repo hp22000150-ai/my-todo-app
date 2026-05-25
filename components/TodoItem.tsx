@@ -110,6 +110,24 @@ function DdayBadge({ dueDateStr, dueTime }: { dueDateStr: string; dueTime: strin
   );
 }
 
+function NoteWithLinks({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^https?:\/\//.test(part) ? (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+            className="text-blue-500 underline break-all hover:text-blue-600">
+            {part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 export default function TodoItem({
   todo,
   categories,
@@ -131,6 +149,7 @@ export default function TodoItem({
   const [editTime, setEditTime] = useState(todo.due_time ?? "");
   const [editPriority, setEditPriority] = useState<"high" | "medium" | "low">(todo.priority ?? "medium");
   const [editNote, setEditNote] = useState(todo.note ?? "");
+  const [editCategory, setEditCategory] = useState(todo.category_id ?? "");
 
   function cancelEdit() {
     setEditTitle(todo.title);
@@ -138,12 +157,14 @@ export default function TodoItem({
     setEditTime(todo.due_time ?? "");
     setEditPriority(todo.priority ?? "medium");
     setEditNote(todo.note ?? "");
+    setEditCategory(todo.category_id ?? "");
     setEditing(false);
   }
 
   async function handleEdit() {
     if (!editTitle.trim()) return;
     const dateChanged = editDate !== initDate || editTime !== (todo.due_time ?? "");
+    const categoryChanged = editCategory !== (todo.category_id ?? "");
     await updateTodo(
       todo.id,
       editTitle,
@@ -151,12 +172,19 @@ export default function TodoItem({
       dateChanged ? editTime || null : undefined,
       editPriority !== (todo.priority ?? "medium") ? editPriority : undefined,
       editNote !== (todo.note ?? "") ? editNote : undefined,
+      categoryChanged ? editCategory || null : undefined,
     );
     setEditing(false);
   }
 
   const category = categories.find((c) => c.id === todo.category_id);
   const pStyle = PRIORITY_STYLES[todo.priority ?? "medium"];
+
+  const isOverdue = !todo.completed && !!todo.due_date && (() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const due = new Date(todo.due_date); due.setHours(0, 0, 0, 0);
+    return due < today;
+  })();
 
   const recurringLabel = todo.is_recurring
     ? todo.recurrence_days === 1 ? "매일"
@@ -167,7 +195,11 @@ export default function TodoItem({
     : null;
 
   return (
-    <li className={`flex items-start gap-3 rounded-lg border border-gray-100 border-l-4 ${pStyle.border} bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800`}>
+    <div className={`flex items-start gap-3 rounded-lg border border-l-4 px-4 py-3 shadow-sm transition-shadow hover:shadow-md ${
+      isOverdue
+        ? "border-red-200 border-l-red-500 bg-red-50/60 dark:border-red-900/50 dark:border-l-red-500 dark:bg-red-900/10"
+        : `border-gray-100 ${pStyle.border} bg-white dark:border-gray-700 dark:bg-gray-800`
+    }`}>
       <button
         onClick={() => onToggle(todo.id, todo.completed)}
         className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
@@ -207,6 +239,18 @@ export default function TodoItem({
                 onChange={(e) => setEditTime(e.target.value)}
                 className="w-28 rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-600 outline-none focus:border-blue-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
               />
+              {categories.length > 0 && (
+                <select
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  className="rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-600 outline-none focus:border-blue-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                >
+                  <option value="">카테고리 없음</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              )}
               <div className="flex gap-1">
                 {(["high", "medium", "low"] as const).map((p) => (
                   <button
@@ -251,7 +295,7 @@ export default function TodoItem({
           <>
             <div className="flex items-center gap-2">
               <span
-                className={`flex-1 truncate text-sm ${
+                className={`flex-1 line-clamp-2 text-sm ${
                   todo.completed
                     ? "text-gray-400 line-through dark:text-gray-500"
                     : "text-gray-700 dark:text-gray-200"
@@ -278,7 +322,7 @@ export default function TodoItem({
             </div>
             {todo.note && (
               <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-                {todo.note}
+                <NoteWithLinks text={todo.note} />
               </p>
             )}
 
@@ -376,6 +420,6 @@ export default function TodoItem({
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-    </li>
+    </div>
   );
 }
